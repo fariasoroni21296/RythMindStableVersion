@@ -1,16 +1,16 @@
-from sklearn.metrics import silhouette_score, calinski_harabasz_score
+from sklearn.metrics import silhouette_score, davies_bouldin_score, adjusted_rand_score
 
+def evaluate(X, labels, true_labels=None):
+    result = {}
 
-def evaluate(X, labels):
-    """
-    Calculate clustering metrics
-    """
-    sil = silhouette_score(X, labels)
-    ch = calinski_harabasz_score(X, labels)
-    return sil, ch
+    if len(set(labels)) > 1:
+        result["silhouette"] = silhouette_score(X, labels)
+        result["db_index"] = davies_bouldin_score(X, labels)
+    else:
+        result["silhouette"] = -1
+        result["db_index"] = -1
 
+    if true_labels is not None:
+        result["ARI"] = adjusted_rand_score(true_labels, labels)
 
-def evaluate_and_print(X, labels, name="Model"):
-    sil, ch = evaluate(X, labels)
-    print(f"{name} -> Silhouette: {sil:.3f}, CH Score: {ch:.2f}")
-    return sil, ch
+    return result

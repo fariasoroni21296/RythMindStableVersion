@@ -3,13 +3,19 @@ import librosa
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-def extract_mfcc(file_path, n_mfcc=13):
+def extract_mfcc(file_path, n_mfcc=40, max_len=130):
     try:
         y, sr = librosa.load(file_path, duration=30)
         mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=n_mfcc)
-        return np.mean(mfcc.T, axis=0)
-    except Exception as e:
-        print("Error:", file_path)
+
+        if mfcc.shape[1] < max_len:
+            pad = max_len - mfcc.shape[1]
+            mfcc = np.pad(mfcc, ((0,0),(0,pad)))
+        else:
+            mfcc = mfcc[:, :max_len]
+
+        return mfcc
+    except:
         return None
 
 

@@ -1,60 +1,47 @@
 import torch
 import torch.nn as nn
 
-class VAE(nn.Module):
-    def __init__(self, input_dim, latent_dim=16):
-        super(VAE, self).__init__()
+class ConvVAE(nn.Module):
+    def __init__(self, latent_dim=16):
+        super().__init__()
 
-        self.fc1 = nn.Linear(input_dim, 128)
-        self.fc21 = nn.Linear(128, latent_dim)
-        self.fc22 = nn.Linear(128, latent_dim)
+        self.encoder = nn.Sequential(
+            nn.Conv2d(1, 32, 3, 2, 1),
+            nn.ReLU(),
+            nn.Conv2d(32, 64, 3, 2, 1),
+            nn.ReLU(),
+            nn.Flatten()
+        )
 
-        self.fc3 = nn.Linear(latent_dim, 128)
-        self.fc4 = nn.Linear(128, input_dim)
+        with torch.no_grad():
+            dummy = torch.zeros(1,1,40,130)
+            out = self.encoder(dummy)
+            self.flatten_dim = out.shape[1]
 
-    def encode(self, x):
-        h = torch.relu(self.fc1(x))
-        return self.fc21(h), self.fc22(h)
+        self.fc_mu = nn.Linear(self.flatten_dim, latent_dim)
+        self.fc_logvar = nn.Linear(self.flatten_dim, latent_dim)
 
-    def reparameterize(self, mu, logvar):
-        std = torch.exp(0.5 * logvar)
-        eps = torch.randn_like(std)
-        return mu + eps * std
+        self.fc = nn.Linear(latent_dim, self.flatten_dim)
 
-    def decode(self, z):
-        h = torch.relu(self.fc3(z))
-        return self.fc4(h)
+        self.decoder = nn.Sequential(
+            nn.Linear(self.flatten_dim, 64*10*33),
+            nn.ReLU(),
+            nn.Unflatten(1, (64,10,33)),
+            nn.ConvTranspose2d(64,32,3,2,1,output_padding=1),
+            nn.ReLU(),
+            nn.ConvTranspose2d(32,1,3,2,1,output_padding=1),
+            nn.Sigmoid()
+        )
 
     def forward(self, x):
-        mu, logvar = self.encode(x)
-        z = self.reparameterize(mu, logvar)
-        return self.decode(z), mu, logvar
+        x = self.encoder(x)
+        mu = self.fc_mu(x)
+        logvar = self.fc_logvar(x)
 
+        std = torch.exp(0.5 * logvar)
+        z = mu + std * torch.randn_like(std)
 
-def loss_function(recon_x, x, mu, logvar):
-    mse = nn.functional.mse_loss(recon_x, x)
-    kld = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-    return mse + kld
+        x = self.fc(z)
+        x = self.decoder(x)
 
-
-def train_vae(model, data, epochs=30):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    model = model.to(device)
-    data = torch.tensor(data).float().to(device)
-
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-
-    for epoch in range(epochs):
-        model.train()
-        optimizer.zero_grad()
-
-        recon, mu, logvar = model(data)
-        loss = loss_function(recon, data, mu, logvar)
-
-        loss.backward()
-        optimizer.step()
-
-        print(f"Epoch {epoch+1}, Loss: {loss.item()}")
-
-    return model
+        return x, mu, logvar, z
