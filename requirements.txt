@@ -11,7 +11,7 @@ seaborn==0.13.2
 scikit-learn==1.4.2
 
 # Deep Learning (VAE)
-torch==2.2.2
+torch==2.8.0
 torchaudio==2.2.2
 
 # Audio Processing
