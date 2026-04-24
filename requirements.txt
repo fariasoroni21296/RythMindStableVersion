@@ -18,7 +18,7 @@ torchaudio==2.2.2
 librosa==0.10.1
 
 # NLP / Lyrics Processing
-nltk==3.8.1
+nltk==3.9.4
 spacy==3.7.4
 gensim==4.3.2
 sentence-transformers==2.7.0
