@@ -7,7 +7,7 @@ This project focuses on clustering music tracks using unsupervised learning meth
 Dataset
 
 For audio data, the GTZAN Genre and Rabindra Sangeet Dataset is used. It contains 1100 music samples across 11 different genres such as blues, classical, jazz, rock, and others. You can download it from the following link: 
-https://marsyas.info/downloads/datasets.html
+https://www.kaggle.com/datasets/andradaolteanu/gtzan-dataset-music-genre-classification
 https://www.kaggle.com/datasets/fsoroni/rabindra-sangeet-audio-and-lyrics
 
 For lyrics, a text dataset containing Drake song lyrics is used. It is a simple text file where each line represents a lyric. You can find similar datasets on Kaggle by searching for Drake lyrics: https://www.kaggle.com/datasets
